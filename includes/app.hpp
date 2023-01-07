@@ -17,9 +17,32 @@
 #define SUCCESS(msg) LOG(GREEN, std::cout, msg)
 
 #define MONGO_URI "mongodb://localhost:27017"
+#define DATABASE_NAME "autocomplete_api"
 
 #include <iostream>
+
+#include <drogon/drogon.h>
+
 #include <mongocxx/client.hpp>
 #include <mongocxx/instance.hpp>
+
+#include <bsoncxx/builder/stream/helpers.hpp>
+#include <bsoncxx/builder/stream/document.hpp>
+#include <bsoncxx/json.hpp>
+
+using bsoncxx::builder::stream::finalize;
+
+class MongoDb
+{
+private:
+  static mongocxx::instance _instance;
+  static mongocxx::uri _uri;
+
+public:
+  MongoDb();
+
+  mongocxx::client client;
+  mongocxx::database db;
+};
 
 #endif

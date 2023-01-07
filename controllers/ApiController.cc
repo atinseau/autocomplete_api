@@ -5,20 +5,14 @@
 void ApiController::departements(Req &req, Callback &&callback)
 {
   Json::Value json;
+  MongoDb mongodb;
 
-  json["type"] = "departements";
-  for (auto &it : req->parameters())
-  {
-    json["params"][it.first] = it.second;
-  }
+  DEBUG(mongodb.db.name());
 
   auto resp = HttpResponse::newHttpJsonResponse(json);
 
   resp->setStatusCode(k200OK);
-
   callback(resp);
-
-
 }
 
 void ApiController::regions(Req &req, Callback &&callback)
@@ -34,6 +28,5 @@ void ApiController::regions(Req &req, Callback &&callback)
   auto resp = HttpResponse::newHttpJsonResponse(json);
 
   resp->setStatusCode(k200OK);
-
   callback(resp);
 }

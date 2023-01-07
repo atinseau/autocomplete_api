@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(autocomplete_api_migrations CXX)
+project(autocomplete_api_seeder CXX)
 
 add_executable(${PROJECT_NAME} main.cc)
 
@@ -21,5 +21,12 @@ include_directories("/usr/local/include/libmongoc-1.0")
 include_directories("/usr/local/include/libbson-1.0")
 include_directories("/usr/local/lib")
 
+find_package(cpr REQUIRED)
+target_link_libraries(${PROJECT_NAME} PRIVATE cpr::cpr)
+
 target_link_libraries(${PROJECT_NAME} PRIVATE mongo::mongocxx_shared)
 target_link_libraries(${PROJECT_NAME} PRIVATE mongo::bsoncxx_shared)
+
+aux_source_directory(src SRC_DIR)
+
+target_sources(${PROJECT_NAME} PRIVATE ${SRC_DIR})
