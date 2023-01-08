@@ -8,6 +8,8 @@
 #define PURPLE "\e[1;35m"
 #define GREEN "\e[1;32m"
 
+#define REGEX_WHITESPACE "[ -]"
+
 #define LOG(color, output, msg) output << color << msg << CLEAR << std::endl
 
 #define ERROR(msg) LOG(RED, std::cerr, msg)
@@ -29,7 +31,11 @@
 #include <bsoncxx/builder/stream/helpers.hpp>
 #include <bsoncxx/builder/stream/document.hpp>
 #include <bsoncxx/json.hpp>
+#include <bsoncxx/builder/basic/document.hpp>
+#include <bsoncxx/builder/basic/kvp.hpp>
 
+using bsoncxx::builder::basic::kvp;
+using bsoncxx::builder::basic::make_document;
 using bsoncxx::builder::stream::finalize;
 using bsoncxx::builder::stream::open_document;
 using bsoncxx::builder::stream::document;
@@ -50,7 +56,10 @@ public:
 
 // UTIlS
 Json::Value getParamsToJSON(const std::unordered_map<std::string, std::string, drogon::utils::internal::SafeStringHash> &params);
-bsoncxx::types::b_regex string_to_regex(const std::string& str);
+std::string string_to_strregex(const std::string& str);
 std::string to_lowercase(const std::string& str);
+
+int parse_string_to_int(const std::string& str);
+std::string format_search_string(const std::string& str);
 
 #endif

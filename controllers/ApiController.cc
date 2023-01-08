@@ -2,47 +2,72 @@
 
 // Add definition of your processing function here
 
+GeoQuery::GeoQuery(
+    ApiController::Req &req,
+    const std::string &collection_name,
+    const std::string &search_key) : _req(req),
+                                     _collection_name(collection_name),
+                                     _search_key(search_key)
+{
+  Json::Value params = getParamsToJSON(req->parameters());
+
+  _search = format_search_string(params["search"].asString());
+  _limit = parse_string_to_int(params["limit"].asString());
+}
+
+std::vector<Json::Value> GeoQuery::_extract_json(mongocxx::v_noabi::cursor &results, std::initializer_list<std::string> &keys)
+{
+  std::vector<Json::Value> json_vector;
+
+  for (auto doc : results)
+  {
+    Json::Value json;
+    for (auto key : keys)
+      json[key] = doc[key].get_string().value.to_string();
+
+    if (!_search.empty())
+    {
+      std::string lower_name = to_lowercase(json[_search_key].asString());
+      json["matchScore"] = static_cast<int>(lower_name.find_first_of(REGEX_WHITESPACE));
+    }
+    json_vector.push_back(json);
+  }
+  std::sort(json_vector.begin(), json_vector.end(), [](const Json::Value &a, const Json::Value &b)
+            { return a["matchScore"].asInt() < b["matchScore"].asInt(); });
+
+  return json_vector;
+}
+
+std::vector<Json::Value> GeoQuery::find(std::initializer_list<std::string> keys)
+{
+  auto collection = _mongodb.db.collection(_collection_name);
+  mongocxx::options::find opts{};
+  if (_limit > 0)
+    opts.limit(_limit);
+  auto results = collection.find(make_document(
+                                     kvp(_search_key, bsoncxx::types::b_regex(string_to_strregex(_search), "i"))),
+                                 opts);
+  return _extract_json(results, keys);
+}
+
+const std::string &GeoQuery::get_search() const
+{
+  return _search;
+}
+
 void ApiController::departements(Req &req, Callback &&callback)
 {
   Json::Value json;
   MongoDb mongodb;
-  int i = 0;
 
-  auto params = getParamsToJSON(req->parameters());
-  auto collection = mongodb.db.collection("departements");
-  std::string search = params["search"].asString();
+  GeoQuery query(req, "departements", "name");
 
-  auto departements = collection.find(
-      document{} << "name"
-                 << open_document
-                 << "$regex" << string_to_regex(search)
-                 << close_document << finalize);
+  auto departements = query.find({"code", "name"});
 
-  json["type"] = "departements";
-
-  std::vector<Json::Value> departements_vector;
-  for (auto departement : departements)
-  {
-    Json::Value json_departement;
-
-    json_departement["code"] = departement["code"].get_string().value.to_string();
-    json_departement["name"] = departement["name"].get_string().value.to_string();
-    json_departement["codeRegion"] = departement["codeRegion"].get_string().value.to_string();
-
-    std::string lower_name = to_lowercase(json_departement["name"].asString());
-    json_departement["matchScore"] = static_cast<int>(lower_name.find(to_lowercase(search)));
-
-    departements_vector.push_back(json_departement);
-    i++;
-  }
-  json["count"] = i;
-
-  std::sort(departements_vector.begin(), departements_vector.end(), [](const Json::Value &a, const Json::Value &b) {
-    return a["matchScore"].asInt() < b["matchScore"].asInt();
-  });
-
-  for (auto &departement : departements_vector)
+  for (auto &departement : departements)
     json["departements"].append(departement);
+  json["count"] = static_cast<int>(departements.size());
+  json["type"] = "departements";
 
   auto resp = HttpResponse::newHttpJsonResponse(json);
   resp->setStatusCode(k200OK);
@@ -52,15 +77,18 @@ void ApiController::departements(Req &req, Callback &&callback)
 void ApiController::regions(Req &req, Callback &&callback)
 {
   Json::Value json;
+  MongoDb mongodb;
 
+  GeoQuery query(req, "regions", "name");
+
+  auto regions = query.find({"code", "name"});
+
+  for (auto &region : regions)
+    json["regions"].append(region);
   json["type"] = "regions";
-  for (auto &it : req->parameters())
-  {
-    json["params"][it.first] = it.second;
-  }
+  json["count"] = static_cast<int>(regions.size());
 
   auto resp = HttpResponse::newHttpJsonResponse(json);
-
   resp->setStatusCode(k200OK);
   callback(resp);
 }

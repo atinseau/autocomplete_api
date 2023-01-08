@@ -20,3 +20,24 @@ public:
   void regions(Req &req, Callback &&callback);
   void departements(Req &req, Callback &&callback);
 };
+
+
+class GeoQuery
+{
+  public:
+    GeoQuery(ApiController::Req &req, const std::string& collection_name, const std::string& search_key);
+    std::vector<Json::Value> find(std::initializer_list<std::string> keys);
+    const std::string& get_search() const;
+
+  private:
+    ApiController::Req& _req;
+    std::string _collection_name;
+    std::string _search_key;
+    MongoDb _mongodb;
+
+    std::string _search;
+    int _limit;
+
+    std::vector<Json::Value> _extract_json(mongocxx::v_noabi::cursor& results, std::initializer_list<std::string>& keys);
+
+};
