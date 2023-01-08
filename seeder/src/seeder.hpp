@@ -24,5 +24,6 @@ private:
   std::vector<std::future<void>> _futures;
 };
 
+
 void regions_seeder(const SeederProps &props);
 void departements_seeder(const SeederProps &props);

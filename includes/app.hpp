@@ -31,6 +31,9 @@
 #include <bsoncxx/json.hpp>
 
 using bsoncxx::builder::stream::finalize;
+using bsoncxx::builder::stream::open_document;
+using bsoncxx::builder::stream::document;
+using bsoncxx::builder::stream::close_document;
 
 class MongoDb
 {
@@ -44,5 +47,10 @@ public:
   mongocxx::client client;
   mongocxx::database db;
 };
+
+// UTIlS
+Json::Value getParamsToJSON(const std::unordered_map<std::string, std::string, drogon::utils::internal::SafeStringHash> &params);
+bsoncxx::types::b_regex string_to_regex(const std::string& str);
+std::string to_lowercase(const std::string& str);
 
 #endif
