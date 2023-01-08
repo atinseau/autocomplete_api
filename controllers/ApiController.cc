@@ -24,12 +24,15 @@ std::vector<Json::Value> GeoQuery::_extract_json(mongocxx::v_noabi::cursor &resu
     Json::Value json;
     for (auto key : keys)
       json[key] = doc[key].get_string().value.to_string();
+    std::string lower_name = to_lowercase(json[_search_key].asString());
 
     if (!_search.empty())
     {
       std::string lower_name = to_lowercase(json[_search_key].asString());
-      json["matchScore"] = static_cast<int>(lower_name.find_first_of(REGEX_WHITESPACE));
+      // json["matchScore"] = static_cast<int>(lower_name.find_first_of(REGEX_WHITESPACE));
+      json["matchScore"] = static_cast<int>(lower_name.find(_search));
     }
+
     json_vector.push_back(json);
   }
   std::sort(json_vector.begin(), json_vector.end(), [](const Json::Value &a, const Json::Value &b)
