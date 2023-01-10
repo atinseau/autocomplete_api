@@ -14,9 +14,11 @@ struct SeederProps
 class MongoDbSeeder
 {
 public:
+  typedef std::function<void(const SeederProps &)> Seeder;
+
   MongoDbSeeder();
   const mongocxx::client &client() const;
-  void run(void (*seeder)(const SeederProps &));
+  void run(Seeder seeder);
   void wait();
 
 private:

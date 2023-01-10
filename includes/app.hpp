@@ -62,4 +62,8 @@ std::string to_lowercase(const std::string& str);
 int parse_string_to_int(const std::string& str);
 std::string format_search_string(const std::string& str);
 
+void insert_bson_to_json(bsoncxx::document::view::const_iterator &it, Json::Value &json, bsoncxx::document::view &doc, const std::string &key);
+
+int strval(const std::string &str);
+
 #endif

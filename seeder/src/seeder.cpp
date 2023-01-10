@@ -10,7 +10,7 @@ const mongocxx::client &MongoDbSeeder::client() const
   return (this->_mongodb.client);
 }
 
-void MongoDbSeeder::run(void (*seeder)(const SeederProps &))
+void MongoDbSeeder::run(Seeder seeder)
 {
   SeederProps props = {
     this->_mongodb.db,

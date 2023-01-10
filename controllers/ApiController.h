@@ -15,10 +15,12 @@ public:
   METHOD_LIST_BEGIN
   ADD_METHOD_TO(ApiController::regions, "/api/v1/regions", Get);
   ADD_METHOD_TO(ApiController::departements, "/api/v1/departements", Get);
+  ADD_METHOD_TO(ApiController::communes, "/api/v1/communes", Get);
   METHOD_LIST_END
 
   void regions(Req &req, Callback &&callback);
   void departements(Req &req, Callback &&callback);
+  void communes(Req &req, Callback &&callback);
 };
 
 

@@ -21,27 +21,42 @@ std::vector<Json::Value> GeoQuery::_extract_json(mongocxx::v_noabi::cursor &resu
 
   for (auto doc : results)
   {
+
     Json::Value json;
-    for (auto key : keys)
-      json[key] = doc[key].get_string().value.to_string();
-    std::string lower_name = to_lowercase(json[_search_key].asString());
+
+    if (keys.size())
+    {
+      for (auto key : keys)
+        json[key] = doc[key].get_string().value.to_string();
+    }
+    else
+    {
+      for (auto it = doc.begin(); it != doc.end(); it++)
+      {
+        std::string key = it->key().to_string();
+        if (key == "_id")
+          continue;
+        insert_bson_to_json(it, json, doc, key);
+      }
+    }
 
     if (!_search.empty())
     {
       std::string lower_name = to_lowercase(json[_search_key].asString());
-      // json["matchScore"] = static_cast<int>(lower_name.find_first_of(REGEX_WHITESPACE));
-      json["matchScore"] = static_cast<int>(lower_name.find(_search));
+      size_t pos = lower_name.find(_search);
+      json["matchScore"] = static_cast<int>(pos + (lower_name.length() - _search.length()));
     }
 
     json_vector.push_back(json);
   }
+
   std::sort(json_vector.begin(), json_vector.end(), [](const Json::Value &a, const Json::Value &b)
             { return a["matchScore"].asInt() < b["matchScore"].asInt(); });
 
   return json_vector;
 }
 
-std::vector<Json::Value> GeoQuery::find(std::initializer_list<std::string> keys)
+std::vector<Json::Value> GeoQuery::find(std::initializer_list<std::string> keys = {})
 {
   auto collection = _mongodb.db.collection(_collection_name);
   mongocxx::options::find opts{};
@@ -65,7 +80,7 @@ void ApiController::departements(Req &req, Callback &&callback)
 
   GeoQuery query(req, "departements", "name");
 
-  auto departements = query.find({"code", "name"});
+  auto departements = query.find();
 
   for (auto &departement : departements)
     json["departements"].append(departement);
@@ -84,12 +99,31 @@ void ApiController::regions(Req &req, Callback &&callback)
 
   GeoQuery query(req, "regions", "name");
 
-  auto regions = query.find({"code", "name"});
+  auto regions = query.find();
 
   for (auto &region : regions)
     json["regions"].append(region);
   json["type"] = "regions";
   json["count"] = static_cast<int>(regions.size());
+
+  auto resp = HttpResponse::newHttpJsonResponse(json);
+  resp->setStatusCode(k200OK);
+  callback(resp);
+}
+
+void ApiController::communes(Req &req, Callback &&callback)
+{
+  Json::Value json;
+  MongoDb mongodb;
+
+  GeoQuery query(req, "communes", "name");
+
+  auto communes = query.find();
+
+  for (auto &region : communes)
+    json["communes"].append(region);
+  json["type"] = "communes";
+  json["count"] = static_cast<int>(communes.size());
 
   auto resp = HttpResponse::newHttpJsonResponse(json);
   resp->setStatusCode(k200OK);

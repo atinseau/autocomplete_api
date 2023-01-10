@@ -60,3 +60,28 @@ std::string format_search_string(const std::string &str)
 {
   return to_lowercase(str);
 }
+
+void insert_bson_to_json(bsoncxx::document::view::const_iterator &it, Json::Value &json, bsoncxx::document::view &doc, const std::string &key)
+{
+  if (it->type() == bsoncxx::type::k_string)
+    json[key] = doc[key].get_string().value.to_string();
+  if (it->type() == bsoncxx::type::k_int32)
+    json[key] = doc[key].get_int32().value;
+  if (it->type() == bsoncxx::type::k_array)
+  {
+    Json::Value json_array;
+    auto array = doc[key].get_array().value;
+    for (auto &array_it: array)
+      json_array.append(array_it.get_string().value.to_string());
+    json[key] = json_array;
+  }
+}
+
+
+int strval(const std::string &str)
+{
+  int result = 0;
+  for (auto &c : str)
+    result += c;
+  return result;
+}

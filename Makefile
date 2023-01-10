@@ -1,6 +1,5 @@
 PROJECT_NAME = autocomplete_api
 MAKEFILE_PARAMS = -j --no-print-directory
-GET_ARGS = $(filter-out $@,$(MAKECMDGOALS))
 
 build:
 	@mkdir -p build
@@ -18,10 +17,15 @@ serve: all
 	@cd build && ./$(PROJECT_NAME)
 
 seeder: all
-	@cd build && ./seeder/$(PROJECT_NAME)_seeder $(call GET_ARGS)
+	@cd build && ./seeder/$(PROJECT_NAME)_seeder $(filter-out $@,$(MAKECMDGOALS))
 
 test: all
 	@cd build && ./tests/$(PROJECT_NAME)_test
+
+
+# ignore all arguments after seeder
+%:
+	@:
 
 .PHONY: build all clean fclean migrations test
 
