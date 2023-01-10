@@ -12,7 +12,7 @@ void regions_seeder(const SeederProps &props)
 
   Json::Value root;
   Json::Reader reader;
-
+  
   if (!reader.parse(r.text, root))
   {
     ERROR("Failed to parse JSON");
